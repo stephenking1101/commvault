@@ -1,0 +1,149 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<App_CreateSubClientRequest>
+  <subClientProperties>
+    <subClientEntity>
+      <appName></appName>
+      <backupsetName />
+      <clientName />
+      <instanceName></instanceName>
+      <subclientName />
+    </subClientEntity>
+    <contentOperationType />
+    <commonProperties>
+      <turboNASClient>
+        <clientName/>
+      </turboNASClient>
+      <encryptionFlag />
+      <description />
+      <enableBackup></enableBackup>
+      <numberOfBackupStreams />
+      <onDemandSubClient />
+      <allowMultipleDataReaders />
+      <storageDevice>
+        <networkAgents />
+        <softwareCompression />
+        <throttleNetworkBandwidth />
+        <applicableReadSize />
+        <dataBackupStoragePolicy>
+          <storagePolicyName />
+        </dataBackupStoragePolicy>
+        <deDuplicationOptions>
+          <enableDeduplication />
+          <generateSignature />
+        </deDuplicationOptions>
+      </storageDevice>
+      <snapCopyInfo>
+        <snapToTapeProxyToUseSource />
+        <isRMANEnableForTapeMovement />
+        <isSnapBackupEnabled />
+        <snapToTapeSelectedEngine>
+          <snapShotEngineName />
+        </snapToTapeSelectedEngine>
+        <snapToTapeProxyToUse>
+          <clientName />
+        </snapToTapeProxyToUse>
+      </snapCopyInfo>
+      <prepostProcess>
+        <preScanCommand />
+        <postScanCommand />
+        <preBackupCommand />
+        <postBackupCommand />
+        <runPostBackup />
+        <runAs />
+        <prepostUserName>
+          <userName />
+          <password />
+        </prepostUserName>
+      </prepostProcess>
+      <expandSymbolicLinks />
+    </commonProperties>
+    <fsSubClientProp>
+      <useGlobalFilters />
+      <useVSS />
+      <vssOptions/>
+      <useVssForAllFilesOptions/>
+      <useVSSForSystemState />
+      <backupSystemState />
+      <backupSystemStateforFullBkpOnly />
+      <backupFilesQualifiedForArchive/>
+      <oneTouchSubclient />
+      <retentionRule/>
+      <daysToKeepItems/>
+      <deleteArchiveJob/>
+      <deleteArchiveJobAfterDays/>
+      <userDeletedStubRetention/>
+      <userDeletedStubRetentionDays/>
+      <enableOnePass/>
+      <diskCleanupRules>
+        <enableArchivingWithRules/>
+        <startCleaningIfLessThan/>
+        <stopCleaningIfupto/>
+        <fileAccessTimeOlderThan/>
+        <fileModifiedTimeOlderThan/>
+        <fileCreatedTimeOlderThan/>
+        <fileSizeGreaterThan/>
+        <maximumFileSize/>
+        <archiveReadOnlyFiles/>
+        <afterArchivingRule/>
+        <useNativeSnapshotToPreserveFileAccessTime/>
+      </diskCleanupRules>
+    </fsSubClientProp>
+    <oracleSubclientProp>
+      <selectiveOnlineFull/>
+      <data/>
+      <backupMode/>
+      <backupControlFile/>
+      <backupSPFile/>
+      <protectBackupRecoveryArea/>
+      <dataFilesPerBFS/>
+      <maxBackupSetSizeInKB/>
+      <archiveFilesPerBFS/>
+      <maxOpenFiles/>
+      <oracleTag/>
+      <lightsOutScript/>
+      <warning/>
+      <delayTimeinMin/>
+      <sleepTimeinMin/>
+      <sleepTimeinSec/>
+      <triesNumber/>
+      <useSQLConntect/>
+      <startupPFile/>
+      <skipReadOnly/>
+      <skipOffline/>
+      <skipInaccessible/>
+      <validate/>
+      <enableTableBrowse/>
+      <mergeIncImageCopies/>
+      <resyncCatalog/>
+      <backupArchiveLog/>
+      <archiveDelete/>
+      <disableSwitchCurrentLog/>
+      <selectArchiveLogDestForBackup/>
+      <archiveLogDestForBackupOpType/>
+      <archiveLogDestForBackup/>
+      <selectArchiveLogDestForDelete/>
+      <archiveLogDestForDeleteOpType/>
+      <archiveLogDestForDelete/>
+      <dataThresholdStreams/>
+    </oracleSubclientProp>
+    <content>
+      <path />
+    </content>
+    <content>
+      <excludePath />
+    </content>
+    <content>
+      <includePath />
+    </content>
+    <content>
+      <oracleContent>
+        <tableSpace/>
+        <dataFile/>
+      </oracleContent>
+    </content>
+    <impersonateUser>
+      <userName />
+      <password />
+    </impersonateUser>
+  </subClientProperties>
+</App_CreateSubClientRequest>

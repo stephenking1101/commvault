@@ -1,0 +1,14 @@
+
+server: 192.168.56.101
+setup:
+  field_mapping:
+    appname: '数据类型*'
+    clientname: '主机名称*'
+    subclientname:
+    storage_policy_name:
+    path: '文件备份路径*'
+    num_of_backup_streams:
+    backupset_name:
+    descpt:
+    content_operation_type:
+    enableBackup:

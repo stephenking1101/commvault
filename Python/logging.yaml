@@ -1,0 +1,46 @@
+# version	必选项，其值是一个整数值，表示配置格式的版本，当前唯一可用的值就是1
+# formatters	可选项，其值是一个字典对象，该字典对象每个元素的key为要定义的格式器名称，value为格式器的配置信息组成的dict，如format和datefmt
+# filters	可选项，其值是一个字典对象，该字典对象每个元素的key为要定义的过滤器名称，value为过滤器的配置信息组成的dict，如name
+# handlers	可选项，其值是一个字典对象，该字典对象每个元素的key为要定义的处理器名称，value为处理器的配置信息组成的dcit，如class、level、formatter和filters，其中class为必选项，其它为可选项；其他配置信息将会传递给class所指定的处理器类的构造函数，如下面的handlers定义示例中的stream、filename、maxBytes和backupCount等
+# loggers	可选项，其值是一个字典对象，该字典对象每个元素的key为要定义的日志器名称，value为日志器的配置信息组成的dcit，如level、handlers、filters 和 propagate（yes
+# root	可选项，这是root logger的配置信息，其值也是一个字典对象。除非在定义其它logger时明确指定propagate值为no，否则root logger定义的handlers都会被作用到其它logger上
+# incremental	可选项，默认值为False。该选项的意义在于，如果这里定义的对象已经存在，那么这里对这些对象的定义是否应用到已存在的对象上。值为False表示，已存在的对象将会被重新定义。
+# disable_existing_loggers	可选项，默认值为True。该选项用于指定是否禁用已存在的日志器loggers，如果incremental的值为True则该选项将会被忽略
+
+version: 1
+disable_existing_loggers: False
+formatters:
+        simple:
+            format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        advance:
+            format: "%(asctime)s - %(name)s - %(process)d - %(levelname)s - %(message)s"
+handlers:
+    console:
+            class: logging.StreamHandler
+            level: DEBUG
+            formatter: advance
+            stream: ext://sys.stdout #sys.stderr这样的外部对象, 配置系统会在字符串值中查找特定的前缀，例如'ext://sys.stderr'中'ext://'会被移除
+    info_file_handler:
+            class: logging.handlers.RotatingFileHandler
+            level: INFO
+            formatter: simple
+            filename: info.log
+            maxBytes: 10485760 # 10MB
+            backupCount: 5
+            encoding: utf8
+    error_file_handler:
+            class: logging.handlers.RotatingFileHandler
+            level: ERROR
+            formatter: simple
+            filename: errors.log
+            maxBytes: 10485760
+            backupCount: 5
+            encoding: utf8
+loggers:
+    my_module:
+            level: INFO
+            handlers: [console,info_file_handler,error_file_handler]
+            propagate: no
+root:
+    level: DEBUG
+    handlers: [console]
