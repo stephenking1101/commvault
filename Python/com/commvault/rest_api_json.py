@@ -53,10 +53,64 @@ class RestAPI(API):
             self.logger.error("There was an error logging in: %s", r.status_code)
             raise RuntimeError("Login Failed")
 
-    def createsubclient(self, template, appname, clientname, subclientname, storage_policy_name="", paths=(),
+    def get_storage_policy(self):
+        self.logger.info("Get storage policy list")
+        headers = {'Cookie2': self.token, "Accept": "application/json",
+                   "Authtoken": self.token}
+
+        r = requests.get(self.url + "StoragePolicy", headers=headers)
+        resp_root = r.json()
+        self.logger.debug("Response from server: %s", resp_root)
+        policies = resp_root.get("policies")
+        storage_policy_name_list = []
+
+        if r.status_code != 200 and r.status_code != 201:
+            error_code = resp_root.get("errorCode")
+            error_msg = resp_root.get("errorMessage")
+            self.logger.error("Failed to get storage policy list. %s Error Code: %s", error_msg, error_code)
+            return storage_policy_name_list, policies
+
+        # for policy in policies:
+        #     storage_policy_name_list.append(policy.get("storagePolicyName"))
+        storage_policy_name_list = [policy.get("storagePolicyName") for policy in policies if policy.get("storagePolicyName")]
+        self.logger.debug("Get storage policy list successfully: %s", storage_policy_name_list)
+
+        return storage_policy_name_list, policies
+
+    def get_subclient(self, client_id=None, client_name=None):
+        self.logger.info("Get storage policy list clientId %s clientName %s", client_id, client_name)
+        headers = {'Cookie2': self.token, "Accept": "application/json",
+                   "Authtoken": self.token}
+
+        if client_id is not None:
+            content = {"clientId": client_id}
+        elif client_name is not None:
+            content = {"clientName": client_name}
+        else:
+            self.logger.error("Both clientId and clientName are null")
+            raise RuntimeError("Either clientId or clientName should be provided")
+
+        r = requests.get(self.url + "Subclient", params=content, headers=headers)
+        resp_root = r.json()
+        self.logger.debug("Response from server: %s", resp_root)
+        subclient_properties = resp_root.get("subClientProperties")
+        subclient_list = []
+
+        if r.status_code != 200 and r.status_code != 201:
+            error_code = resp_root.get("errorCode")
+            error_msg = resp_root.get("errorMessage")
+            self.logger.error("Failed to get subclient list. %s Error Code: %s", error_msg, error_code)
+            return subclient_list, subclient_properties
+
+        subclient_list = [subclient.get("subClientEntity").get("subclientName") for subclient in subclient_properties if
+                          subclient.get("subClientEntity") and subclient.get("subClientEntity").get("subclientName")]
+        self.logger.debug("Get storage policy list successfully: %s", subclient_list)
+        return subclient_list, subclient_properties
+
+    def create_subclient(self, template, appname, clientname, subclientname, storage_policy_name="", paths=(),
                         num_of_backup_streams=1, backupset_name="defaultBackupSet", descpt="",
                         content_operation_type="", enable_backup=True):
-        self.logger.info("Creating subclient: %s", subclientname)
+        self.logger.info("Creating subclient %s in client %s", subclientname, clientname)
 
         headers = {'Cookie2': self.token, "Content-Type": "application/json", "Accept": "application/json",
                    "Authtoken": self.token}
@@ -99,10 +153,9 @@ class RestAPI(API):
         resp_root = r.json()
         self.logger.debug("Response from server: %s", resp_root)
 
-        error_code = resp_root.get("errorCode")
-        error_msg = resp_root.get("errorMessage")
-
-        if r.status_code != 200:
+        if r.status_code != 200 and r.status_code != 201:
+            error_code = resp_root.get("errorCode")
+            error_msg = resp_root.get("errorMessage")
             self.logger.error("Failed to create subclient: %s. %s Error Code: %s",
                               subclientname, error_msg, error_code)
         else:

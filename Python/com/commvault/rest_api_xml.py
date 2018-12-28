@@ -51,7 +51,7 @@ class RestAPI(API):
             self.logger.error("There was an error logging in: %s", r.status_code)
             raise RuntimeError("Login Failed")
 
-    def createsubclient(self, appname, clientname, subclientname, storage_policy_name="", paths=(),
+    def create_subclient(self, appname, clientname, subclientname, storage_policy_name="", paths=(),
                         num_of_backup_streams="1", backupset_name="defaultBackupSet", descpt="",
                         content_operation_type="", enable_backup="true"):
         self.logger.info("Creating subclient: %s", subclientname)

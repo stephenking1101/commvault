@@ -1,5 +1,5 @@
 
-server: 192.168.56.101
+server: 192.168.56.10
 setup:
   field_mapping:
     clientname: '主机名称*'

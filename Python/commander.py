@@ -6,6 +6,7 @@ import argparse
 from com.commvault.api import API
 from com.commvault.rest_api_json import RestAPI
 from com.commvault.logger import logger
+from com.commvault.util import dict_util
 from openpyxl import load_workbook
 import os
 import yaml
@@ -35,6 +36,9 @@ class Commander:
                 template = json.load(f)
         self.logger.debug("Create NAS subclient with template: %s", template)
 
+        storage_policy_name_list, policies = api.get_storage_policy()
+        storage_policy_name_list.sort(reverse=True)
+
         for conf in self.conf_array:
             self.logger.debug("Creating subclient in client: %s", conf.get(self.get_field_mapping_val("clientname")))
 
@@ -42,10 +46,10 @@ class Commander:
             important_system_flag = conf.get(self.get_field_mapping_val("important_system_flag")).strip()
             important_data_flag = conf.get(self.get_field_mapping_val("important_data_flag")).strip()
             datatype = conf.get(self.get_field_mapping_val("datatype")).strip()
+            clientname = conf.get(self.get_field_mapping_val("clientname")).strip()
             appname = ""
-            storage_policy_name = ""
             if osname.lower() == "nas":
-                appname = "File System"
+                appname = "NAS"
 
             if important_system_flag == u"否" or important_data_flag == u"否":
                 storage_policy_name = "L34_"
@@ -53,13 +57,25 @@ class Commander:
                 storage_policy_name = "L12_"
 
             if datatype == u"应用日志":
-                storage_policy_name = storage_policy_name + "APPLOG_31D_I_10Y_1"
+                storage_policy_name = storage_policy_name + "APPLOG"
 
-            api.createsubclient(appname=appname,
-                                clientname='win-2012-server',
-                                subclientname=storage_policy_name,
-                                storage_policy_name="SP-FS-1D",
-                                paths=["C:\\temp"],
+            for sp in storage_policy_name_list:
+                if sp.startswith(storage_policy_name):
+                    storage_policy_name = sp
+                    break
+
+            subclient_list, subclient_properties = api.get_subclient(client_name=clientname)
+            subclient_name = storage_policy_name
+            while subclient_name in subclient_list:
+                self.logger.debug("Subclient %s already exists", subclient_name)
+                seq = subclient_name[subclient_name.rindex("_") + 1:]
+                subclient_name = subclient_name[:subclient_name.rindex("_") + 1] + str(int(seq) + 1)
+
+            api.create_subclient(appname=appname,
+                                clientname=clientname,
+                                subclientname=subclient_name,
+                                storage_policy_name=storage_policy_name,
+                                paths=[conf.get(self.get_field_mapping_val("path")).strip()],
                                 descpt=conf.get(self.get_field_mapping_val("description")).strip(),
                                 content_operation_type="ADD",
                                 template=template)
@@ -67,7 +83,7 @@ class Commander:
         api.logout()
 
     def get_field_mapping_val(self, key):
-        mapping = self.system_properties.get("setup").get("field_mapping")
+        mapping = dict_util.get_dict_child(self.system_properties, ("setup", "field_mapping"))
         return mapping.get(key)
 
     def load_excel(self, filename):
