@@ -2,13 +2,11 @@
 server: 192.168.56.101
 setup:
   field_mapping:
-    appname: '数据类型*'
     clientname: '主机名称*'
-    subclientname:
-    storage_policy_name:
+    important_system_flag: '是否为重要信息系统'
+    important_data_flag: '是否保存外部客户原始凭证数据的系统'
+    datatype: '数据类型*'
+    os: '操作系统'
     path: '文件备份路径*'
-    num_of_backup_streams:
-    backupset_name:
-    descpt:
-    content_operation_type:
-    enableBackup:
+    start_time: '备份开始时间'
+    description: '备份数据说明'

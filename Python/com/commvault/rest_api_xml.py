@@ -51,9 +51,9 @@ class RestAPI(API):
             self.logger.error("There was an error logging in: %s", r.status_code)
             raise RuntimeError("Login Failed")
 
-    def createsubclient(self, appname, clientname, subclientname, storage_policy_name="", paths=[],
+    def createsubclient(self, appname, clientname, subclientname, storage_policy_name="", paths=(),
                         num_of_backup_streams="1", backupset_name="defaultBackupSet", descpt="",
-                        content_operation_type="", enableBackup="true"):
+                        content_operation_type="", enable_backup="true"):
         self.logger.info("Creating subclient: %s", subclientname)
 
         headers = {'Cookie2': self.token}
@@ -73,7 +73,7 @@ class RestAPI(API):
 
         data = self.__xml_update_element(data, "./subClientProperties/contentOperationType", content_operation_type)
 
-        data = self.__xml_update_element(data, "./subClientProperties/commonProperties/enableBackup", enableBackup)
+        data = self.__xml_update_element(data, "./subClientProperties/commonProperties/enableBackup", enable_backup)
 
         data = self.__xml_update_element(data, "./subClientProperties/commonProperties/description", descpt)
 
@@ -89,16 +89,20 @@ class RestAPI(API):
 
         r = requests.post(self.url + "Subclient", data=ET.tostring(data.getroot(), encoding="utf8", method="xml"), headers=headers)
         resp = r.text
+        self.logger.debug("Response from server: %s", resp)
         # print(resp)
         respRoot = ET.fromstring(resp)
+        errorCode = "0"
         # Check if Element has children or not
-        if len(list(respRoot)) == 0:
+        # if len(list(respRoot)) == 0:
+        if respRoot.attrib["errorCode"] is not None:
             errorCode = respRoot.attrib["errorCode"]
             errorMsg = respRoot.attrib["errorMessage"]
         else:
             respEle = respRoot.find(".//[@errorCode]")
-            errorCode = respEle.attrib["errorCode"]
-            errorMsg = respEle.attrib["errorMessage"]
+            if respEle is not None:
+                errorCode = respEle.attrib["errorCode"]
+                errorMsg = respEle.attrib["errorMessage"]
 
         if errorCode == "0":
             self.logger.info("Subclient: %s create successfully", subclientname)
@@ -124,7 +128,7 @@ class RestAPI(API):
         return xml
 
 #if __name__ == '__main__':
-#    abc = RestAPI("admin", "ShuXun@123456")
+#    abc = RestAPI("admin", "")
 #    abc.login("192.168.56.101")
 #    abc.createsubclient("appname", "client", "sub", "sotrage")
 #    abc.logout()

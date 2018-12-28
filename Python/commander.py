@@ -4,11 +4,12 @@
 # -*- coding: utf-8 -*-
 import argparse
 from com.commvault.api import API
-from com.commvault.rest_api import RestAPI
+from com.commvault.rest_api_json import RestAPI
 from com.commvault.logger import logger
 from openpyxl import load_workbook
 import os
 import yaml
+import json
 
 
 class Commander:
@@ -16,23 +17,52 @@ class Commander:
     def __init__(self, system_config="./system_config.yaml"):
         self.logger = logger.getlogger(Commander.__name__)
         self.logger.debug("Init application with config file: %s", system_config)
-
+        self.system_properties = {}
         if os.path.exists(system_config):
             with open(system_config, "r") as f:
                 self.system_properties = yaml.safe_load(f.read())
-        #print(self.system_properties.get("setup").get("field_mapping"))
+        # print(self.system_properties.get("setup").get("field_mapping"))
 
         self.conf_array = []
         self.logger.debug("Inited application with configs: %s", self.system_properties)
 
     def create_nas_subclient(self, api=API()):
         api.login(self.system_properties.get("server"))
+        template_path = "./create_subclient_template.json"
+        template = {}
+        if os.path.exists(template_path):
+            with open(template_path, "r") as f:
+                template = json.load(f)
+        self.logger.debug("Create NAS subclient with template: %s", template)
 
         for conf in self.conf_array:
             self.logger.debug("Creating subclient in client: %s", conf.get(self.get_field_mapping_val("clientname")))
-            api.createsubclient(args.appName, conf.get(self.get_field_mapping_val("clientname")), args.subclientName, args.storagePolicyName, paths,
-                                args.numberOfBackupStreams, args.backupsetName, args.description,
-                                args.contentOperationType)
+
+            osname = conf.get(self.get_field_mapping_val("os")).strip()
+            important_system_flag = conf.get(self.get_field_mapping_val("important_system_flag")).strip()
+            important_data_flag = conf.get(self.get_field_mapping_val("important_data_flag")).strip()
+            datatype = conf.get(self.get_field_mapping_val("datatype")).strip()
+            appname = ""
+            storage_policy_name = ""
+            if osname.lower() == "nas":
+                appname = "File System"
+
+            if important_system_flag == u"否" or important_data_flag == u"否":
+                storage_policy_name = "L34_"
+            else:
+                storage_policy_name = "L12_"
+
+            if datatype == u"应用日志":
+                storage_policy_name = storage_policy_name + "APPLOG_31D_I_10Y_1"
+
+            api.createsubclient(appname=appname,
+                                clientname='win-2012-server',
+                                subclientname=storage_policy_name,
+                                storage_policy_name="SP-FS-1D",
+                                paths=["C:\\temp"],
+                                descpt=conf.get(self.get_field_mapping_val("description")).strip(),
+                                content_operation_type="ADD",
+                                template=template)
 
         api.logout()
 
@@ -78,7 +108,7 @@ class Commander:
 
 
 # sub-command functions
-def create_subclient(self, args, api=API()):
+def create_subclient(args, api=API()):
     api.login(args.server)
 
     if args.path is None:
@@ -142,5 +172,5 @@ if __name__ == "__main__":
     api = RestAPI(args.userName, args.password)
 
     c = Commander()
-    c.load_excel("C:/Users/stephenwang/Downloads/test.xlsx")
+    c.load_excel("C:/Users/stephenwang/Downloads/clientconfig.xlsx")
     c.create_nas_subclient(api)

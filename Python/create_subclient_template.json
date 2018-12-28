@@ -1,0 +1,150 @@
+{
+        "subClientProperties": {
+            "commonProperties": {
+                "allowMultipleDataReaders": null,
+                "description": null,
+                "enableBackup": null,
+                "encryptionFlag": null,
+                "expandSymbolicLinks": null,
+                "numberOfBackupStreams": null,
+                "onDemandSubClient": null,
+                "prepostProcess": {
+                    "postBackupCommand": null,
+                    "postScanCommand": null,
+                    "preBackupCommand": null,
+                    "preScanCommand": null,
+                    "prepostUserName": {
+                        "password": null,
+                        "userName": null
+                    },
+                    "runAs": null,
+                    "runPostBackup": null
+                },
+                "snapCopyInfo": {
+                    "isRMANEnableForTapeMovement": null,
+                    "isSnapBackupEnabled": null,
+                    "snapToTapeProxyToUse": {
+                        "clientName": null
+                    },
+                    "snapToTapeProxyToUseSource": null,
+                    "snapToTapeSelectedEngine": {
+                        "snapShotEngineName": null
+                    }
+                },
+                "storageDevice": {
+                    "applicableReadSize": null,
+                    "dataBackupStoragePolicy": {
+                        "storagePolicyName": null
+                    },
+                    "deDuplicationOptions": {
+                        "enableDeduplication": null,
+                        "generateSignature": null
+                    },
+                    "networkAgents": null,
+                    "softwareCompression": null,
+                    "throttleNetworkBandwidth": null
+                },
+                "turboNASClient": {
+                    "clientName": null
+                }
+            },
+            "content": [
+                {
+                    "path": null
+                },
+                {
+                    "excludePath": null
+                },
+                {
+                    "includePath": null
+                },
+                {
+                    "oracleContent": {
+                        "dataFile": null,
+                        "tableSpace": null
+                    }
+                }
+            ],
+            "contentOperationType": null,
+            "fsSubClientProp": {
+                "backupFilesQualifiedForArchive": null,
+                "backupSystemState": null,
+                "backupSystemStateforFullBkpOnly": null,
+                "daysToKeepItems": null,
+                "deleteArchiveJob": null,
+                "deleteArchiveJobAfterDays": null,
+                "diskCleanupRules": {
+                    "afterArchivingRule": null,
+                    "archiveReadOnlyFiles": null,
+                    "enableArchivingWithRules": null,
+                    "fileAccessTimeOlderThan": null,
+                    "fileCreatedTimeOlderThan": null,
+                    "fileModifiedTimeOlderThan": null,
+                    "fileSizeGreaterThan": null,
+                    "maximumFileSize": null,
+                    "startCleaningIfLessThan": null,
+                    "stopCleaningIfupto": null,
+                    "useNativeSnapshotToPreserveFileAccessTime": null
+                },
+                "enableOnePass": null,
+                "oneTouchSubclient": null,
+                "retentionRule": null,
+                "useGlobalFilters": null,
+                "useVSS": null,
+                "useVSSForSystemState": null,
+                "useVssForAllFilesOptions": null,
+                "userDeletedStubRetention": null,
+                "userDeletedStubRetentionDays": null,
+                "vssOptions": null
+            },
+            "impersonateUser": {
+                "password": null,
+                "userName": null
+            },
+            "oracleSubclientProp": {
+                "archiveDelete": null,
+                "archiveFilesPerBFS": null,
+                "archiveLogDestForBackup": null,
+                "archiveLogDestForBackupOpType": null,
+                "archiveLogDestForDelete": null,
+                "archiveLogDestForDeleteOpType": null,
+                "backupArchiveLog": null,
+                "backupControlFile": null,
+                "backupMode": null,
+                "backupSPFile": null,
+                "data": null,
+                "dataFilesPerBFS": null,
+                "dataThresholdStreams": null,
+                "delayTimeinMin": null,
+                "disableSwitchCurrentLog": null,
+                "enableTableBrowse": null,
+                "lightsOutScript": null,
+                "maxBackupSetSizeInKB": null,
+                "maxOpenFiles": null,
+                "mergeIncImageCopies": null,
+                "oracleTag": null,
+                "protectBackupRecoveryArea": null,
+                "resyncCatalog": null,
+                "selectArchiveLogDestForBackup": null,
+                "selectArchiveLogDestForDelete": null,
+                "selectiveOnlineFull": null,
+                "skipInaccessible": null,
+                "skipOffline": null,
+                "skipReadOnly": null,
+                "sleepTimeinMin": null,
+                "sleepTimeinSec": null,
+                "startupPFile": null,
+                "triesNumber": null,
+                "useSQLConntect": null,
+                "validate": null,
+                "warning": null
+            },
+            "subClientEntity": {
+                "appName": null,
+                "backupsetName": null,
+                "clientName": null,
+                "instanceName": null,
+                "subclientName": null
+            }
+        }
+}

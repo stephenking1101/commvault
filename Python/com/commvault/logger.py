@@ -10,10 +10,10 @@ import yaml
 class Logger:
 
     def __init__(self):
-        logConf = "./logging.yaml"
+        log_conf = "./logging.yaml"
 
-        if os.path.exists(logConf):
-            with open(logConf, "r") as f:
+        if os.path.exists(log_conf):
+            with open(log_conf, "r") as f:
                 config = yaml.safe_load(f.read())
                 logging.config.dictConfig(config)
         else:
@@ -24,4 +24,3 @@ class Logger:
 
 
 logger = Logger()
-
