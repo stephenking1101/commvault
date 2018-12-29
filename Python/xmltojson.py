@@ -21,7 +21,7 @@ def load_json(file_path):
 
 
 if __name__ == "__main__":
-    jsonstr = load_json("./create_subclient_template.xml")
+    jsonstr = load_json("src/commvault/template/create_subclient_template.xml")
     # print(jsonstr)
     # 将 Python 对象编码成 JSON 字符串
     print(json.dumps(jsonstr, sort_keys=True, indent=4, separators=(',', ': ')))

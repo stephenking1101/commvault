@@ -10,7 +10,8 @@ import yaml
 class Logger:
 
     def __init__(self):
-        log_conf = "./logging.yaml"
+        src_path = os.path.dirname(os.path.realpath(__file__))
+        log_conf = src_path + "/../logging.yaml"
 
         if os.path.exists(log_conf):
             with open(log_conf, "r") as f:

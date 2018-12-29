@@ -57,7 +57,7 @@ class RestAPI(API):
         self.logger.info("Creating subclient: %s", subclientname)
 
         headers = {'Cookie2': self.token}
-        data = ET.parse("./create_subclient_template.xml")
+        data = ET.parse("template/create_subclient_template.xml")
 
         data = self.__xml_update_element(data, "./subClientProperties/subClientEntity/appName", appname)
         # appName = data.find("./subClientProperties/subClientEntity/appName")

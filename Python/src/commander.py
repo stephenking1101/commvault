@@ -3,10 +3,10 @@
 
 # -*- coding: utf-8 -*-
 import argparse
-from com.commvault.api import API
-from com.commvault.rest_api_json import RestAPI
-from com.commvault.logger import logger
-from com.commvault.util import dict_util
+from commvault.api import API
+from commvault.rest_api_json import RestAPI
+from commvault.logger import logger
+from commvault.util import dict_util
 from openpyxl import load_workbook
 import os
 import yaml
@@ -28,8 +28,11 @@ class Commander:
         self.logger.debug("Inited application with configs: %s", self.system_properties)
 
     def create_nas_subclient(self, api=API()):
+        src_path = os.path.dirname(os.path.realpath(__file__))
+        # cwd = os.getcwd() # current working directory
+
         api.login(self.system_properties.get("server"))
-        template_path = "./create_subclient_template.json"
+        template_path = src_path + "/commvault/template/create_subclient_template.json"
         template = {}
         if os.path.exists(template_path):
             with open(template_path, "r") as f:
@@ -72,13 +75,13 @@ class Commander:
                 subclient_name = subclient_name[:subclient_name.rindex("_") + 1] + str(int(seq) + 1)
 
             api.create_subclient(appname=appname,
-                                clientname=clientname,
-                                subclientname=subclient_name,
-                                storage_policy_name=storage_policy_name,
-                                paths=[conf.get(self.get_field_mapping_val("path")).strip()],
-                                descpt=conf.get(self.get_field_mapping_val("description")).strip(),
-                                content_operation_type="ADD",
-                                template=template)
+                                 clientname=clientname,
+                                 subclientname=subclient_name,
+                                 storage_policy_name=storage_policy_name,
+                                 paths=[conf.get(self.get_field_mapping_val("path")).strip()],
+                                 descpt=conf.get(self.get_field_mapping_val("description")).strip(),
+                                 content_operation_type="ADD",
+                                 template=template)
 
         api.logout()
 
@@ -123,48 +126,25 @@ class Commander:
         return self.conf_array
 
 
-# sub-command functions
-def create_subclient(args, api=API()):
-    api.login(args.server)
-
-    if args.path is None:
-        paths = []
-    else:
-        paths = args.path
-
-    api.createsubclient(args.appName, args.clientName, args.subclientName, args.storagePolicyName, paths,
-                        args.numberOfBackupStreams, args.backupsetName, args.description, args.contentOperationType)
-    api.logout()
-
-
-def cmd():
+def main():
     applogger = logger.getlogger(__name__)
+    src_path = os.path.dirname(os.path.realpath(__file__))
+    com = Commander(system_config=src_path+"/system_config.yaml")
 
     # create top-level parser
     parser = argparse.ArgumentParser()
 
     # 定位参数的使用, python cli_fw.py 8
-    parser.add_argument("server", help="web server ip address/host name", type=str)
     parser.add_argument("userName", help="user to login the CommServe", type=str)
     parser.add_argument("password", help="password of the specific user", type=str)
 
-    subparsers = parser.add_subparsers(help="sub-command help")
+    subparsers = parser.add_subparsers(help="batchJob -h to show help")
 
-    # create the parser for the 'createSubclient' command
-    parser_create_subclient = subparsers.add_parser('createSubclient', help='create subclient')
-    parser_create_subclient.set_defaults(func=create_subclient)
-    parser_create_subclient.add_argument('appName', type=str, help='agent type')
-    parser_create_subclient.add_argument('clientName', type=str, help='client name')
-    parser_create_subclient.add_argument('subclientName', type=str, help='subclient name')
-    parser_create_subclient.add_argument('--numberOfBackupStreams', type=int, help='number of backup streams',
-                                         default=1)
-    parser_create_subclient.add_argument('--description', type=str, help='subclient description')
-    parser_create_subclient.add_argument('--storagePolicyName', type=str, help='storage policy to be associated')
-    parser_create_subclient.add_argument('--backupsetName', type=str, help='backupset name', default="defaultBackupSet")
-    parser_create_subclient.add_argument('--contentOperationType', type=str, help='add/del/modify content',
-                                         default="ADD")
-    parser_create_subclient.add_argument('--path', action='append', type=str,
-                                         help='content to backup, can be more then one --path')
+    # create the parser for the 'batchJob' command
+    parser_create_subclient = subparsers.add_parser('batchJob', help='Bulk client/subclient creation and configuration')
+    parser_create_subclient.set_defaults(func=com.create_nas_subclient)
+    parser_create_subclient.add_argument('filepath', type=str,
+                                         help='Excel file path that contains subclient config')
 
     args = parser.parse_args()
     applogger.debug("arguments: %s", args)
@@ -174,19 +154,10 @@ def cmd():
     # args = parser.parse_args("server user pwd createSubclient app client subclient".split())
 
     api = RestAPI(args.userName, args.password)
+    com.load_excel(args.filepath)
     # call sub command
-    args.func(args, api)
+    args.func(api)
 
 
 if __name__ == "__main__":
-    # main()
-    parser = argparse.ArgumentParser()
-    parser.add_argument("userName", help="user to login the CommServe", type=str)
-    parser.add_argument("password", help="password of the specific user", type=str)
-
-    args = parser.parse_args()
-    api = RestAPI(args.userName, args.password)
-
-    c = Commander()
-    c.load_excel("C:/Users/stephenwang/Downloads/clientconfig.xlsx")
-    c.create_nas_subclient(api)
+    main()
