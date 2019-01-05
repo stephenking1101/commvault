@@ -4,7 +4,9 @@
 打包命令：python setup.py sdist
 
 ## Installation Step
-
+```
+# python ./setup.py install
+```
 
 ## Uninstall Step
 * 增加 –record 参数重新安装软件包，执行命令：

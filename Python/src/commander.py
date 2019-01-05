@@ -8,6 +8,7 @@ from commvault.rest_api_json import RestAPI
 from commvault.logger import logger
 from commvault.util import dict_util
 from openpyxl import load_workbook
+import xml.etree.ElementTree as ET
 import os
 import yaml
 import json
@@ -27,7 +28,7 @@ class Commander:
         self.conf_array = []
         self.logger.debug("Inited application with configs: %s", self.system_properties)
 
-    def create_nas_subclient(self, api=API()):
+    def create_subclients(self, api=API()):
         src_path = os.path.dirname(os.path.realpath(__file__))
         # cwd = os.getcwd() # current working directory
 
@@ -37,57 +38,116 @@ class Commander:
         if os.path.exists(template_path):
             with open(template_path, "r") as f:
                 template = json.load(f)
-        self.logger.debug("Create NAS subclient with template: %s", template)
+        self.logger.debug("Create subclients with template: %s", template)
 
-        storage_policy_name_list, policies = api.get_storage_policy()
+        storage_policy_name_list, storage_policies = api.get_storage_policy()
         storage_policy_name_list.sort(reverse=True)
 
+        schedule_policy_name_list, schedule_policies = api.get_schedule_policy()
+
+        str_func = lambda val: val if val and isinstance(val, basestring) else (str(val) if val else "")
         for conf in self.conf_array:
             self.logger.debug("Creating subclient in client: %s", conf.get(self.get_field_mapping_val("clientname")))
 
-            osname = conf.get(self.get_field_mapping_val("os")).strip()
-            important_system_flag = conf.get(self.get_field_mapping_val("important_system_flag")).strip()
-            important_data_flag = conf.get(self.get_field_mapping_val("important_data_flag")).strip()
-            datatype = conf.get(self.get_field_mapping_val("datatype")).strip()
-            clientname = conf.get(self.get_field_mapping_val("clientname")).strip()
-            appname = ""
-            if osname.lower() == "nas":
-                appname = "NAS"
+            osname = dict_util.dict_get_converted_value(conf, self.get_field_mapping_val("os"), str_func).strip()
+            important_system_flag = dict_util.dict_get_converted_value(conf, self.get_field_mapping_val(
+                "important_system_flag"), str_func).strip()
+            important_data_flag = dict_util.dict_get_converted_value(conf, self.get_field_mapping_val(
+                "important_data_flag"), str_func).strip()
+            datatype = dict_util.dict_get_converted_value(conf, self.get_field_mapping_val("datatype"), str_func).strip()
+            clientname = dict_util.dict_get_converted_value(conf, self.get_field_mapping_val("clientname"), str_func).strip()
+            database_instance_name = dict_util.dict_get_converted_value(conf, self.get_field_mapping_val(
+                "database_instance_name"), str_func).strip()
+            database_name = dict_util.dict_get_converted_value(conf,
+                                                               self.get_field_mapping_val("database_name"), str_func).strip()
+            database_installation_path = dict_util.dict_get_converted_value(conf, self.get_field_mapping_val(
+                "database_installation_path"), str_func).strip()
+            start_time = dict_util.dict_get_converted_value(conf, self.get_field_mapping_val(
+                "start_time"), str_func).strip()
+            start_time = start_time[:start_time.index(":")]
 
-            if important_system_flag == u"否" or important_data_flag == u"否":
-                storage_policy_name = "L34_"
-            else:
-                storage_policy_name = "L12_"
-
-            if datatype == u"应用日志":
-                storage_policy_name = storage_policy_name + "APPLOG"
-
-            for sp in storage_policy_name_list:
-                if sp.startswith(storage_policy_name):
-                    storage_policy_name = sp
-                    break
+            storage_policy_name = self.get_storage_policy_name(important_system_flag, important_data_flag, datatype,
+                                                               storage_policy_name_list)
 
             subclient_list, subclient_properties = api.get_subclient(client_name=clientname)
-            subclient_name = storage_policy_name
-            while subclient_name in subclient_list:
-                self.logger.debug("Subclient %s already exists", subclient_name)
-                seq = subclient_name[subclient_name.rindex("_") + 1:]
-                subclient_name = subclient_name[:subclient_name.rindex("_") + 1] + str(int(seq) + 1)
+            subclient_name = self.get_subclient_name(storage_policy_name, subclient_list)
 
+            self.do_create_subclient(osname=osname.lower(),
+                                 datatype=datatype,
+                                 clientname=clientname,
+                                 subclient_name=subclient_name,
+                                 storage_policy_name=storage_policy_name,
+                                 paths=[dict_util.dict_get_converted_value(conf,
+                                                                           self.get_field_mapping_val("path"), str_func).strip()],
+                                 database_instance_name=database_instance_name,
+                                 database_name=database_name,
+                                 database_installation_path=database_installation_path,
+                                 descpt=dict_util.dict_get_converted_value(conf, self.get_field_mapping_val(
+                                     "description"), str_func).strip(),
+                                 template=template,
+                                 api=api)
+
+        api.logout()
+
+    def create_oracle_instance(self, command, api=API()):
+        src_path = os.path.dirname(os.path.realpath(__file__))
+        template = ET.parse(src_path + "/commvault/template/CreateInstance_Template.xml")
+        r = api.post_execute_qcommand(ET.tostring(template.getroot()), command)
+        self.logger.debug("Response from server: %s", r.json() if r else r)
+
+    def do_create_subclient(self, osname, datatype, clientname,
+                            subclient_name, storage_policy_name, paths,
+                            database_instance_name, database_name, database_installation_path,
+                            descpt, template, api=API()):
+        if osname == "nas":
+            appname = "NAS"
             api.create_subclient(appname=appname,
                                  clientname=clientname,
                                  subclientname=subclient_name,
                                  storage_policy_name=storage_policy_name,
-                                 paths=[conf.get(self.get_field_mapping_val("path")).strip()],
-                                 descpt=conf.get(self.get_field_mapping_val("description")).strip(),
+                                 paths=paths,
+                                 descpt=descpt,
                                  content_operation_type="ADD",
                                  template=template)
-
-        api.logout()
+            return True
+        elif osname == "linux" or osname == "windows":
+            if datatype == "Oracle":
+                command = "qoperation execute -clientName " + clientname + " -instanceName " + database_instance_name + " -logBackupStoragePolicy/storagePolicyName " + storage_policy_name + " -commandLineStoragePolicy/storagePolicyName " + storage_policy_name + " -dataArchiveGroup/storagePolicyName " + storage_policy_name + " -oracleHome '" + database_installation_path + "' -oracleUser/userName oracle -sqlConnect/userName '/' -useCatalogConnect false"
+                self.create_oracle_instance(command, api)
+                return True
+        else:
+            return False
 
     def get_field_mapping_val(self, key):
-        mapping = dict_util.get_dict_child(self.system_properties, ("setup", "field_mapping"))
+        mapping = dict_util.dict_get_child(self.system_properties, ("setup", "field_mapping"))
         return mapping.get(key)
+
+    def get_storage_policy_name(self, important_system_flag, important_data_flag, datatype, storage_policy_name_list):
+        if important_system_flag == u"否" or important_data_flag == u"否":
+            storage_policy_name = "L34_"
+        else:
+            storage_policy_name = "L12_"
+
+        if datatype == u"应用日志":
+            storage_policy_name = storage_policy_name + "APPLOG_"
+        elif datatype == "Oracle":
+            storage_policy_name = storage_policy_name + "DB_"
+
+        for sp in storage_policy_name_list:
+            if sp.startswith(storage_policy_name):
+                storage_policy_name = sp
+                break
+
+        return storage_policy_name
+
+    def get_subclient_name(self, propose_name, name_list):
+        subclient_name = propose_name
+        while subclient_name in name_list:
+            self.logger.debug("Subclient %s already exists", subclient_name)
+            seq = subclient_name[subclient_name.rindex("_") + 1:]
+            subclient_name = subclient_name[:subclient_name.rindex("_") + 1] + str(int(seq) + 1)
+
+        return subclient_name
 
     def load_excel(self, filename):
         self.logger.debug("Going to load excel file: %s", filename)
@@ -129,7 +189,7 @@ class Commander:
 def main():
     applogger = logger.getlogger(__name__)
     src_path = os.path.dirname(os.path.realpath(__file__))
-    com = Commander(system_config=src_path+"/system_config.yaml")
+    com = Commander(system_config=src_path + "/system_config.yaml")
 
     # create top-level parser
     parser = argparse.ArgumentParser()
@@ -142,7 +202,7 @@ def main():
 
     # create the parser for the 'batchJob' command
     parser_create_subclient = subparsers.add_parser('batchJob', help='Bulk client/subclient creation and configuration')
-    parser_create_subclient.set_defaults(func=com.create_nas_subclient)
+    parser_create_subclient.set_defaults(func=com.create_subclients)
     parser_create_subclient.add_argument('filepath', type=str,
                                          help='Excel file path that contains subclient config')
 

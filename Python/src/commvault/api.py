@@ -24,6 +24,10 @@ class API(object):
         pass
 
     # @abstractmethod
+    def get_schedule_policy(self):
+        pass
+
+    # @abstractmethod
     def get_subclient(self, client_id, client_name):
         pass
 
@@ -31,4 +35,8 @@ class API(object):
     def create_subclient(self, template, appname, clientname, subclientname, storage_policy_name, paths,
                         num_of_backup_streams, backupset_name, descpt,
                         content_operation_type, enable_backup):
+        pass
+
+    # @abstractmethod
+    def post_execute_qcommand(self, template, command):
         pass

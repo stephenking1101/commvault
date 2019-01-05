@@ -77,8 +77,30 @@ class RestAPI(API):
 
         return storage_policy_name_list, policies
 
+    def get_schedule_policy(self):
+        self.logger.info("Get schedule policy list")
+        headers = {'Cookie2': self.token, "Accept": "application/json",
+                   "Authtoken": self.token}
+
+        r = requests.get(self.url + "SchedulePolicy", headers=headers)
+        resp_root = r.json()
+        self.logger.debug("Response from server: %s", resp_root)
+        policies = resp_root.get("taskDetail")
+        schedule_policy_name_list = []
+
+        if r.status_code != 200 and r.status_code != 201:
+            error_code = resp_root.get("errorCode")
+            error_msg = resp_root.get("errorMessage")
+            self.logger.error("Failed to get storage policy list. %s Error Code: %s", error_msg, error_code)
+            return schedule_policy_name_list, policies
+
+        schedule_policy_name_list = [policy.get("task").get("taskName") for policy in policies if policy.get("task")]
+        self.logger.debug("Get schedule policy list successfully: %s", schedule_policy_name_list)
+
+        return schedule_policy_name_list, policies
+
     def get_subclient(self, client_id=None, client_name=None):
-        self.logger.info("Get storage policy list clientId %s clientName %s", client_id, client_name)
+        self.logger.info("Get subclient list with clientId %s clientName %s", client_id, client_name)
         headers = {'Cookie2': self.token, "Accept": "application/json",
                    "Authtoken": self.token}
 
@@ -104,7 +126,7 @@ class RestAPI(API):
 
         subclient_list = [subclient.get("subClientEntity").get("subclientName") for subclient in subclient_properties if
                           subclient.get("subClientEntity") and subclient.get("subClientEntity").get("subclientName")]
-        self.logger.debug("Get storage policy list successfully: %s", subclient_list)
+        self.logger.debug("Get subclient list successfully: %s", subclient_list)
         return subclient_list, subclient_properties
 
     def create_subclient(self, template, appname, clientname, subclientname, storage_policy_name="", paths=(),
@@ -148,7 +170,7 @@ class RestAPI(API):
 
         template = dict_util.dict_update_child(template, content, "content", "subClientProperties")
 
-        dict_util.remove_null_pair(template)
+        dict_util.dict_remove_null_pair(template)
         r = requests.post(self.url + "Subclient", json=template, headers=headers)
         resp_root = r.json()
         self.logger.debug("Response from server: %s", resp_root)
@@ -159,7 +181,7 @@ class RestAPI(API):
             self.logger.error("Failed to create subclient: %s. %s Error Code: %s",
                               subclientname, error_msg, error_code)
         else:
-            self.logger.info("Subclient: %s create successfully", subclientname)
+            self.logger.info("Subclient: %s created successfully", subclientname)
         # errorList = resp_root.get("errList")
 
         # if errorList is not None and len(errorList) > 0:
@@ -172,7 +194,22 @@ class RestAPI(API):
         #     self.logger.error("Failed to create subclient: %s. %s. Error Code: %s",
         #                       subclientname, errorMsg, errorCode)
 
+    def post_execute_qcommand(self, template, command):
+        headers = {'Cookie2': self.token,
+                   "Content-Type": "application/x-www-form-urlencoded",
+                   "Accept": "application/json",
+                   "Authtoken": self.token}
+
+        data = {'command': command}
+        if template:
+            data['inputRequestXML'] = template
+
+        response = requests.post(self.url + "ExecuteQCommand", data=data, headers=headers)
+
+        return response
+
     def logout(self):
+        self.logger.info("Logging out")
         headers = {'Cookie2': self.token}
         requests.post(self.url + "Logout", headers=headers)
         self.logger.info("Logout Successful")

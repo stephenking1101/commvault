@@ -10,3 +10,6 @@ setup:
     path: '文件备份路径*'
     start_time: '备份开始时间'
     description: '备份数据说明'
+    database_instance_name: '数据库实例名*'
+    database_name: '数据库名*'
+    database_installation_path: '数据库安装路径*'
