@@ -95,7 +95,8 @@ class Commander:
                                  template=template,
                                  api=api)
 
-            api.update_schedule_policy_entry_assoc(template=schedule_policy_template, subclientId=subclient_id, taskName=schedule_policy_name)
+            if subclient_id:
+                api.update_schedule_policy_entry_assoc(template=schedule_policy_template, subclientId=subclient_id, taskName=schedule_policy_name)
 
         api.logout()
 
@@ -146,7 +147,11 @@ class Commander:
                 self.update_oracle_subclient(command, api)
 
                 # update oracle subclient properties
-                command = "qoperation execute -appName 'Oracle' -clientName " + clientname + " -instanceName " + database_instance_name + " -subclientName " + storage_policy_name + " -selectiveOnlineFull true -dataBackupStoragePolicy/storagePolicyName " + storage_policy_name
+                command = "qoperation execute -appName 'Oracle' -clientName " + clientname + " -instanceName " + database_instance_name + " -subclientName " + storage_policy_name + " -selectiveOnlineFull true -dataBackupStoragePolicy/storagePolicyName " + storage_policy_name + " -softwareCompression 'USE_STORAGE_POLICY_SETTINGS' -backupSPFile true -dataFilesPerBFS 1 -skipInaccessible true -archiveDelete true"
+                self.update_oracle_subclient(command, api)
+
+                # update oracle subclient properties
+                command = "qoperation execute -appName 'Oracle' -clientName " + clientname + " -instanceName " + database_instance_name + " -subclientName 'ArchiveLog' -softwareCompression 'USE_STORAGE_POLICY_SETTINGS' -backupControlFile false -archiveDelete false"
                 self.update_oracle_subclient(command, api)
 
                 subclient_list, subclient_properties = api.get_subclient(client_name=clientname)
