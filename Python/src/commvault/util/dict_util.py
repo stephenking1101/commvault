@@ -22,6 +22,21 @@ def dict_get_converted_value(dictobj, children_name, func):
     return func(dictobj.get(children_name))
 
 
+def dict_get_value_traversal(dictobj, key):
+    result = None
+    dict_object = dictobj
+    if key in dict_object:
+        return dict_object.get(key)
+    else:
+        for value in dict_object.values():
+            if isinstance(value, dict):
+                result = dict_get_value_traversal(value, key)
+                if result is not None:
+                    break
+
+    return result
+
+
 def dict_remove_null_pair(dictobj):
     if not isinstance(dictobj, dict):
         return False

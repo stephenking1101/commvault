@@ -1,0 +1,50 @@
+{
+  "taskInfo":{
+    "taskOperation":5,
+    "associations":[
+      {
+        "subclientId": null,
+        "clientGroupId": null,
+        "applicationId": null,
+        "clientName":"",
+        "backupsetId": null,
+        "instanceId": null,
+        "clientId": null,
+        "subclientName":"",
+        "backupsetName":"",
+        "instanceName":"",
+        "clientGroupName":"",
+        "appName":"",
+        "flags":{
+          "deleted": null,
+          "exclude": null
+        }
+      },
+      {
+        "subclientId": null,
+        "clientGroupId": null,
+        "applicationId": null,
+        "clientName":"",
+        "backupsetId": null,
+        "instanceId": null,
+        "clientId": null,
+        "subclientName":"",
+        "backupsetName":"",
+        "instanceName":"",
+        "clientGroupName":"",
+        "appName":""
+      },
+      {
+        "storagePolicyId": null,
+        "copyId": null,
+        "storagePolicyName":"",
+        "copyName":""
+      }
+    ],
+    "task":{
+      "task":{
+        "taskName":""
+      }
+    }
+  }
+}

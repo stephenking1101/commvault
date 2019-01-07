@@ -28,6 +28,10 @@ class API(object):
         pass
 
     # @abstractmethod
+    def update_schedule_policy_entry_assoc(self, template, appName, clientName, subclientName, instanceName, backupsetName, taskName):
+        pass
+
+    # @abstractmethod
     def get_subclient(self, client_id, client_name):
         pass
 

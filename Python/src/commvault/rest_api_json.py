@@ -99,6 +99,30 @@ class RestAPI(API):
 
         return schedule_policy_name_list, policies
 
+    def update_schedule_policy_entry_assoc(self, template, taskName, subclientId=None):
+        self.logger.info("Update schedule policy entry association with subclient id: %s", subclientId)
+        headers = {'Cookie2': self.token, "Content-Type": "application/json", "Accept": "application/json",
+                   "Authtoken": self.token}
+
+        entry = {"subclientId": subclientId}
+
+        dict_util.dict_remove_null_pair(entry)
+        template = dict_util.dict_update_child(template, [entry], "associations", "taskInfo")
+        template = dict_util.dict_update_child(template, taskName, "taskName", "taskInfo", "task", "task")
+        self.logger.debug("Update schedule policy entry association with template: %s", template)
+
+        r = requests.put(self.url + "Task", json=template, headers=headers)
+        resp_root = r.json()
+        self.logger.debug("Response from server: %s", resp_root)
+
+        if r.status_code != 200 and r.status_code != 201:
+            error_code = resp_root.get("errorCode")
+            error_msg = resp_root.get("errorMessage")
+            self.logger.error("Failed to update schedule: %s. %s Error Code: %s",
+                              taskName, error_msg, error_code)
+        else:
+            self.logger.info("Schedule policy: %s updated successfully, subclient id : %s", taskName, subclientId)
+
     def get_subclient(self, client_id=None, client_name=None):
         self.logger.info("Get subclient list with clientId %s clientName %s", client_id, client_name)
         headers = {'Cookie2': self.token, "Accept": "application/json",
@@ -174,6 +198,7 @@ class RestAPI(API):
         r = requests.post(self.url + "Subclient", json=template, headers=headers)
         resp_root = r.json()
         self.logger.debug("Response from server: %s", resp_root)
+        sublcient_id = None
 
         if r.status_code != 200 and r.status_code != 201:
             error_code = resp_root.get("errorCode")
@@ -181,7 +206,9 @@ class RestAPI(API):
             self.logger.error("Failed to create subclient: %s. %s Error Code: %s",
                               subclientname, error_msg, error_code)
         else:
-            self.logger.info("Subclient: %s created successfully", subclientname)
+            sublcient_id = dict_util.dict_get_value_traversal(resp_root, "subclientId")
+            self.logger.info("Subclient: %s created successfully, subclient id : %s", subclientname, sublcient_id)
+            return sublcient_id
         # errorList = resp_root.get("errList")
 
         # if errorList is not None and len(errorList) > 0:
@@ -193,6 +220,7 @@ class RestAPI(API):
         # else:
         #     self.logger.error("Failed to create subclient: %s. %s. Error Code: %s",
         #                       subclientname, errorMsg, errorCode)
+        return sublcient_id
 
     def post_execute_qcommand(self, template, command):
         headers = {'Cookie2': self.token,

@@ -40,6 +40,12 @@ class Commander:
                 template = json.load(f)
         self.logger.debug("Create subclients with template: %s", template)
 
+        schedule_policy_template = {}
+        if os.path.exists(src_path + "/commvault/template/update_schedule_policy_entity_assoc_template.json"):
+            with open(src_path + "/commvault/template/update_schedule_policy_entity_assoc_template.json", "r") as f:
+                schedule_policy_template = json.load(f)
+        self.logger.debug("Create subclients with schedule policy template: %s", schedule_policy_template)
+
         storage_policy_name_list, storage_policies = api.get_storage_policy()
         storage_policy_name_list.sort(reverse=True)
 
@@ -64,7 +70,7 @@ class Commander:
                 "database_installation_path"), str_func).strip()
             start_time = dict_util.dict_get_converted_value(conf, self.get_field_mapping_val(
                 "start_time"), str_func).strip()
-            start_time = start_time[:start_time.index(":")]
+            start_time = start_time[:start_time.index(":")+3]
 
             storage_policy_name = self.get_storage_policy_name(important_system_flag, important_data_flag, datatype,
                                                                storage_policy_name_list)
@@ -72,7 +78,9 @@ class Commander:
             subclient_list, subclient_properties = api.get_subclient(client_name=clientname)
             subclient_name = self.get_subclient_name(storage_policy_name, subclient_list)
 
-            self.do_create_subclient(osname=osname.lower(),
+            schedule_policy_name = self.get_schedule_policy_name(osname.lower(), datatype, start_time, schedule_policy_name_list)
+
+            subclient_id = self.do_create_subclient(osname=osname.lower(),
                                  datatype=datatype,
                                  clientname=clientname,
                                  subclient_name=subclient_name,
@@ -87,6 +95,8 @@ class Commander:
                                  template=template,
                                  api=api)
 
+            api.update_schedule_policy_entry_assoc(template=schedule_policy_template, subclientId=subclient_id, taskName=schedule_policy_name)
+
         api.logout()
 
     def create_oracle_instance(self, command, api=API()):
@@ -95,13 +105,29 @@ class Commander:
         r = api.post_execute_qcommand(ET.tostring(template.getroot()), command)
         self.logger.debug("Response from server: %s", r.json() if r else r)
 
+    def update_oracle_subclient(self, command, api=API()):
+        src_path = os.path.dirname(os.path.realpath(__file__))
+        template = ET.parse(src_path + "/commvault/template/update_subclient_template.xml")
+        r = api.post_execute_qcommand(ET.tostring(template.getroot()), command)
+        self.logger.debug("Response from server: %s", r.json() if r else r)
+
+    def get_oracle_subclient_id_from_list(self, subclientName, instanceName, list):
+        subclient_id = None;
+        for subclient in list:
+            if subclient.get("subClientEntity") and subclient.get("subClientEntity").get("appName").lower() == "oracle":
+                if subclient.get("subClientEntity").get("subclientName") == subclientName and subclient.get("subClientEntity").get("instanceName") == instanceName:
+                    subclient_id = subclient.get("subClientEntity").get("subclientId")
+                    break
+
+        return subclient_id
+
     def do_create_subclient(self, osname, datatype, clientname,
                             subclient_name, storage_policy_name, paths,
                             database_instance_name, database_name, database_installation_path,
                             descpt, template, api=API()):
         if osname == "nas":
             appname = "NAS"
-            api.create_subclient(appname=appname,
+            return api.create_subclient(appname=appname,
                                  clientname=clientname,
                                  subclientname=subclient_name,
                                  storage_policy_name=storage_policy_name,
@@ -109,14 +135,25 @@ class Commander:
                                  descpt=descpt,
                                  content_operation_type="ADD",
                                  template=template)
-            return True
+
         elif osname == "linux" or osname == "windows":
             if datatype == "Oracle":
                 command = "qoperation execute -clientName " + clientname + " -instanceName " + database_instance_name + " -logBackupStoragePolicy/storagePolicyName " + storage_policy_name + " -commandLineStoragePolicy/storagePolicyName " + storage_policy_name + " -dataArchiveGroup/storagePolicyName " + storage_policy_name + " -oracleHome '" + database_installation_path + "' -oracleUser/userName oracle -sqlConnect/userName '/' -useCatalogConnect false"
                 self.create_oracle_instance(command, api)
-                return True
+
+                # rename oracle subclient
+                command = "qoperation execute -clientName " + clientname + " -instanceName " + database_instance_name + " -subclientName 'default' -newName " + storage_policy_name
+                self.update_oracle_subclient(command, api)
+
+                # update oracle subclient properties
+                command = "qoperation execute -appName 'Oracle' -clientName " + clientname + " -instanceName " + database_instance_name + " -subclientName " + storage_policy_name + " -selectiveOnlineFull true -dataBackupStoragePolicy/storagePolicyName " + storage_policy_name
+                self.update_oracle_subclient(command, api)
+
+                subclient_list, subclient_properties = api.get_subclient(client_name=clientname)
+
+                return self.get_oracle_subclient_id_from_list(storage_policy_name, database_instance_name, subclient_properties)
         else:
-            return False
+            return None
 
     def get_field_mapping_val(self, key):
         mapping = dict_util.dict_get_child(self.system_properties, ("setup", "field_mapping"))
@@ -138,7 +175,27 @@ class Commander:
                 storage_policy_name = sp
                 break
 
+        self.logger.debug("Got storage policy: %s", storage_policy_name)
         return storage_policy_name
+
+    def get_schedule_policy_name(self, osname, datatype, start_time, schedule_policy_name_list):
+        self.logger.debug("Schedule start time: %s", start_time)
+        if osname == "nas":
+            schedule_policy_name = "NDMP_MonthlyFull"
+        elif datatype == u"应用日志":
+            schedule_policy_name = "FS_MonthlyFull"
+        elif datatype == "Oracle":
+            schedule_policy_name = "DB_DailyFull"
+
+        schedule_list = [sp for sp in schedule_policy_name_list if sp.startswith(schedule_policy_name)]
+
+        for sp in schedule_list:
+            if start_time in sp:
+                schedule_policy_name = sp
+                break
+
+        self.logger.debug("Got schedule policy: %s", schedule_policy_name)
+        return schedule_policy_name
 
     def get_subclient_name(self, propose_name, name_list):
         subclient_name = propose_name
