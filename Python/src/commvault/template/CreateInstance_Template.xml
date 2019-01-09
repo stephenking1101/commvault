@@ -23,7 +23,7 @@
 			<dataArchiveGroup>
 				<storagePolicyName/>
 			</dataArchiveGroup>
-			<disableRMANcrosscheck>false</disableRMANcrosscheck>
+			<disableRMANcrosscheck>true</disableRMANcrosscheck>
 			<encryptionFlag/>
 			<isOnDemand>false</isOnDemand>
 			<numberOfArchiveLogBackupStreams>1</numberOfArchiveLogBackupStreams>
