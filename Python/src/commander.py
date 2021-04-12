@@ -9,7 +9,7 @@ from commvault.logger import logger
 from commvault.util import dict_util
 from openpyxl import load_workbook
 import xml.etree.ElementTree as ET
-import os
+import os, subprocess
 import yaml
 import json
 
@@ -27,6 +27,11 @@ class Commander:
 
         self.conf_array = []
         self.logger.debug("Inited application with configs: %s", self.system_properties)
+
+    def run_command(self, command):
+        proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        stdout, stderr = proc.communicate()
+        return stdout, stderr, proc.returncode
 
     def create_subclients(self, api=API()):
         src_path = os.path.dirname(os.path.realpath(__file__))
@@ -165,7 +170,7 @@ class Commander:
         return mapping.get(key)
 
     def get_storage_policy_name(self, important_system_flag, important_data_flag, datatype, storage_policy_name_list):
-        if important_system_flag == u"否" or important_data_flag == u"否":
+        if important_system_flag == u"否" and important_data_flag == u"否":
             storage_policy_name = "L34_"
         else:
             storage_policy_name = "L12_"

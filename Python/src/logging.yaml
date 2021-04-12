@@ -37,7 +37,7 @@ handlers:
             backupCount: 5
             encoding: utf8
 loggers:
-    my_module:
+    RestAPI:
             level: INFO
             handlers: [console,info_file_handler,error_file_handler]
             propagate: no
