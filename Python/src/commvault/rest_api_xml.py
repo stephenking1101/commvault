@@ -87,7 +87,7 @@ class RestAPI(API):
 
         # print(ET.tostring(data.getroot(), encoding="utf8", method="xml"))
 
-        r = requests.post(self.url + "Subclient", data=ET.tostring(data.getroot(), encoding="utf8", method="xml"), headers=headers)
+        r = requests.post(self.url + "Subclient", data=ET.tostring(data.getroot()), headers=headers)
         resp = r.text
         self.logger.debug("Response from server: %s", resp)
         # print(resp)
@@ -128,7 +128,7 @@ class RestAPI(API):
         return xml
 
 #if __name__ == '__main__':
-#    abc = RestAPI("admin", "")
+#    abc = RestAPI("admin", "ShuXun@123456")
 #    abc.login("192.168.56.101")
-#    abc.createsubclient("appname", "client", "sub", "sotrage")
+#    abc.create_subclient("appname", "client", "sub", "sotrage")
 #    abc.logout()

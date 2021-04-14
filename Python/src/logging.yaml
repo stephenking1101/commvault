@@ -38,9 +38,9 @@ handlers:
             encoding: utf8
 loggers:
     RestAPI:
-            level: INFO
-            handlers: [console,info_file_handler,error_file_handler]
+            level: DEBUG
+            handlers: [console]
             propagate: no
 root:
-    level: DEBUG
-    handlers: [console]
+    level: INFO
+    handlers: [info_file_handler,error_file_handler]
